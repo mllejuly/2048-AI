@@ -10,6 +10,13 @@ Specifically, it has the following modifications:
 
 
 ## Getting Started
+
+### Install Packages
+```
+sh install.sh
+```
+
+### Run the Game
 ```
 python game.py
 ```
