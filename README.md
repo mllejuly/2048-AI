@@ -25,7 +25,7 @@ python game.py
 
 ## Contributors
 
-* [Ruipeng LIU](https://github.com/EmilioLrp) (rliu02@syr.edu)
+* [Ruipeng Liu](https://github.com/EmilioLrp) (rliu02@syr.edu)
 * [Duhao Guo](https://github.com/frankgx97) (dguo13@syr.edu)
 * [Qi Fang](https://github.com/mllejuly) (qfang04@syr.edu)
 
