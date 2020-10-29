@@ -1,6 +1,7 @@
 # 2048 AI
 
-The project implemented an advanced version of classical game 2048 with tree search and machine learning algorithm.
+The project implemented an advanced version of classical game 2048 with Monte Carlo Tree Search.
+
 Specifically, it has the following modifications:
 * **Game Mode**: Game players are allowed to swipe horizontally, vertically, and diagonally.
 * **Board Size**: The game board is 4x4 by default, and can be enlarged up to 10×10. 
@@ -14,4 +15,4 @@ python game.py
 ```
 
 ## Game Demo
-<img width="619" alt="2048-beta" src="https://user-images.githubusercontent.com/38336855/97535655-53fde580-1992-11eb-894f-fa8e23dc9e55.png">
+<img width="519" alt="2048" src="https://user-images.githubusercontent.com/38336855/97535968-d25a8780-1992-11eb-9494-3da182b0f34b.png">
