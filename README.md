@@ -1,4 +1,4 @@
-2048 AI
+# 2048 AI
 
 The project implemented an advanced version of classical game 2048 with tree search and machine learning algorithm.
 Specifically, it has the following modifications:
