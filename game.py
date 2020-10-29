@@ -1,125 +1,137 @@
-from actions import Action
-from board import Board
-import numpy as np
+from tkinter import Frame, Label, CENTER
+import game_ai
+import game_functions
+
+EDGE_LENGTH = 100
+# game size
+CELL_COUNT = 4
+# cell border width
+CELL_PAD = 6
+
+UP_KEY = "'w'"
+DOWN_KEY = "'s'"
+LEFT_KEY = "'a'"
+RIGHT_KEY = "'d'"
+AI_KEY = "'/'"
+AI_PLAY_KEY = "'='"
+
+LABEL_FONT = ("Helvetica", 50, "bold")
+
+# border color
+GAME_COLOR = "#bbada0"
+# empty cell color
+EMPTY_COLOR = "#cec0b5"
+# cell number label colors
+LABEL_COLORS = {2: "#695c57",
+                4: "#695c57",
+                8: "#ffffff",
+                16: "#ffffff",
+                32: "#ffffff",
+                64: "#ffffff",
+                128: "#ffffff",
+                256: "#ffffff",
+                512: "#ffffff",
+                1024: "#ffffff",
+                2048: "#ffffff",
+                4096: "#ffffff",
+                8192: "#ffffff"}
+# cell number background colors
+TILE_COLORS = {2: "#eee4da",
+               4: "#ede0c8",
+               8: "#f2b179",
+               16: "#f59563",
+               32: "#f67d5f",
+               64: "#e64c2e",
+               128: "#ede291",
+               256: "#fce130",
+               512: "#ffdb4a",
+               1024: "#f0b922",
+               2048: "#edc22e",
+               4096: "#edc22e",
+               8192: "#edc22e"}
 
 
-class Game:
+class Display(Frame):
     def __init__(self):
-        self._game_board = Board()
-        self._board_indexes = Game._game_board_indexes(self._game_board.get_size())
-        self._goal = 2048
-        self._move_count = 0
-        self._weighted_score = 0
+        Frame.__init__(self)
 
-    @classmethod
-    def _game_board_indexes(cls, size):
-        board_index = np.ndarray(shape=(size, size), dtype=object)
-        for r in range(board_index.shape[0]):
-            for c in range(board_index.shape[1]):
-                board_index[r, c] = (r, c)
-        return board_index
+        self.grid()
+        self.master.title('2048 AI')
+        self.master.bind("<Key>", self.key_press)
 
-    def get_move_count(self):
-        return self._move_count
+        self.commands = {UP_KEY: game_functions.move_up,
+                         DOWN_KEY: game_functions.move_down,
+                         LEFT_KEY: game_functions.move_left,
+                         RIGHT_KEY: game_functions.move_right,
+                         AI_KEY: game_ai.ai_move,
+                         }
 
-    def get_weighted_score(self):
-        return self._weighted_score
+        self.grid_cells = []
+        self.build_grid()
+        self.init_matrix()
+        self.draw_grid_cells()
 
-    def display(self):
-        print(self._game_board.get_board())
-        print("current total score: %d" % self._game_board.get_score())
-        print("current move count: %d" % self._move_count)
-        print("current weighed score : %f" % self.get_weighted_score())
-        print("========================================================")
+        self.mainloop()
 
-    def get_new_pos(self):
-        return self._game_board.get_new_pos()
+    def build_grid(self):
+        background = Frame(self, bg=GAME_COLOR, width=EDGE_LENGTH, height=EDGE_LENGTH)
+        background.grid()
 
-    # def test_board(self, board):
-    #     self._game_board.test_board(board)
+        for row in range(CELL_COUNT):
+            grid_row = []
+            for col in range(CELL_COUNT):
+                cell = Frame(background, bg=EMPTY_COLOR,
+                             width=EDGE_LENGTH / CELL_COUNT,
+                             height=EDGE_LENGTH / CELL_COUNT)
+                cell.grid(row=row, column=col, padx=CELL_PAD, pady=CELL_PAD)
+                t = Label(master=cell, text="",
+                          bg=EMPTY_COLOR,
+                          justify=CENTER, font=LABEL_FONT, width=4, height=2)
+                t.grid()
+                grid_row.append(t)
 
-    def do_action(self, action):
-        """
-        First, extract lines according to user's input, within each line holds the coordinate of each tile
-        Then, move and merge tiles
-        :param action:
-        :return:
-        """
-        lines = self._get_lines(action=action)
+            self.grid_cells.append(grid_row)
 
-        self._game_board.merge_tile(lines=lines, merge_to_left=Action.left_direction(action))
+    def init_matrix(self):
+        self.matrix = game_functions.initialize_game()
 
-        self._move_count += 1
+    def draw_grid_cells(self):
+        for row in range(CELL_COUNT):
+            for col in range(CELL_COUNT):
+                tile_value = self.matrix[row][col]
+                if not tile_value:
+                    self.grid_cells[row][col].configure(
+                        text="", bg=EMPTY_COLOR)
+                else:
+                    self.grid_cells[row][col].configure(text=str(
+                        tile_value), bg=TILE_COLORS[tile_value],
+                        fg=LABEL_COLORS[tile_value])
+        self.update_idletasks()
 
-        self._weighted_score = float(self._game_board.get_score()) / float(self._move_count)
+    def key_press(self, event):
+        valid_game = True
+        key = repr(event.char)
+        if key == AI_PLAY_KEY:
+            move_count = 0
+            while valid_game:
+                self.matrix, valid_game = game_ai.ai_move(self.matrix, 40, 30)
+                if valid_game:
+                    self.matrix = game_functions.add_new_tile(self.matrix)
+                    self.draw_grid_cells()
+                move_count += 1
+        if key == AI_KEY:
+            self.matrix, move_made = game_ai.ai_move(self.matrix, 20, 30)
+            if move_made:
+                self.matrix = game_functions.add_new_tile(self.matrix)
+                self.draw_grid_cells()
+                move_made = False
 
-    def _get_lines(self, action):
-        lines = []
-        if action in [Action.left.get_value(), Action.right.get_value()]:
-            lines = self._get_row_lines(indexes=self._board_indexes)
-        elif action in [Action.up.get_value(), Action.down.get_value()]:
-            # a vertical operation, transpose the board, then call _get_row_lines
-            index_trans = np.transpose(self._board_indexes)
-            lines = self._get_row_lines(indexes=index_trans)
-        elif action in [Action.upLeft.get_value(), Action.downRight.get_value()]:
-            lines = self._get_diagonal_lines(indexes=self._board_indexes)
-        else:
-            # a forward slash operation, flip the board vertically and call _get_diagonal_lines
-            index_flip = np.fliplr(self._board_indexes)
-            lines = self._get_diagonal_lines(indexes=index_flip)
-        return lines
-
-    def _get_row_lines(self, indexes):
-        lines = []
-        # a horizontal operation, get coordinate of each tile from each row
-        for i in range(indexes.shape[0]):
-            lines.append(indexes[i, :])
-        return lines
-
-    def _get_diagonal_lines(self, indexes):
-        # get the diagonal of the board first
-        lines = [np.diagonal(indexes)]
-        for i in range(1, indexes.shape[0] - 1):
-            # shrink the board to the down left corner by 1 tile, then get its diagonal
-            lines.append(np.diagonal(indexes[i:, :(indexes.shape[1] - i)]))
-            # shrink the board to the up right corner by 1 tile, then get its diagonal
-            lines.append(np.diagonal(indexes[:(indexes.shape[1] - i), i:]))
-        return lines
-
-    def valid_action(self, action):
-        if action in self._valid_actions():
-            return True
-        return False
-
-    def _valid_actions(self):
-        valid_actions = []
-        for act in Action.__members__.values():
-            lines = self._get_lines(action=act.get_value())
-            if self._game_board.movable(lines=lines, to_left=Action.left_direction(act.get_value())):
-                valid_actions.append(act.get_value())
-        return valid_actions
-
-    @property
-    def game_over(self):
-        if np.any(self._game_board.get_board() == self._goal):
-            print("you win !!!")
-            return True
-        if len(self._valid_actions()) == 0:
-            self._weighted_score = -1
-            print("you loose!!!")
-            return True
-        return False
+        elif key in self.commands:
+            self.matrix, move_made, _ = self.commands[repr(event.char)](self.matrix)
+            if move_made:
+                self.matrix = game_functions.add_new_tile(self.matrix)
+                self.draw_grid_cells()
+                move_made = False
 
 
-if __name__ == '__main__':
-    game = Game()
-    game.display()
-    while not game.game_over:
-        action = input("Please input a move: ")
-        if not game.valid_action(action=action):
-            print("Action Invalid!! Game board not updated!!!")
-            continue
-        game.do_action(action=action)
-        print("Newly generated tile at: %s" % str(game.get_new_pos()))
-        game.display()
-    print("Final weighted score is : %d" % game.get_weighted_score())
+gamegrid = Display()
