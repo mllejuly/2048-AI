@@ -7,6 +7,8 @@ Specifically, it has the following modifications:
 * **Board Size**: The game board is 4x4 by default, and can be enlarged up to 10×10. 
 The larger the game board is, the larger the game goal is.
 
+`game goal = 2 ^ (game size + 7)`
+
 
 
 ## Getting Started
